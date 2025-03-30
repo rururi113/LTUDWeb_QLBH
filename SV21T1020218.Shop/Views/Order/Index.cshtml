@@ -1,0 +1,167 @@
+﻿@using SV21T1020218.DomainModels
+@model List<Order>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+
+<section class="py-5">
+    <div class="container px-4 px-lg-5">
+        <div class="card shadow">
+            <div class="card-header text-white" style="background-color: #C8102E;">
+                <h4 class="mb-0"><i class="bi bi-list-check"></i> Đơn hàng của tôi</h4>
+            </div>
+            <div class="card-body">
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-cart-x fs-1" style="color: #C8102E;"></i>
+                        <h5 class="mt-3">Bạn chưa có đơn hàng nào</h5>
+                        <a href="@Url.Action("Index", "Product")" class="btn mt-3" style="background-color: #C8102E; color: white;">
+                            <i class="bi bi-cart-plus"></i> Tiếp tục mua sắm
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="accordion" id="orderAccordion">
+                        @foreach (var order in Model.OrderByDescending(o => o.OrderTime))
+                        {
+                            <div class="accordion-item mb-3">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#order-@order.OrderID">
+                                        <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                            <div>
+                                                <span class="fw-bold">Đơn hàng #@order.OrderID</span>
+                                                <span class="ms-3 text-muted">@order.OrderTime.ToString("dd/MM/yyyy HH:mm")</span>
+                                            </div>
+                                            <div>
+                                                @{
+                                                    var (badgeClass, icon) = order.Status switch
+                                                    {
+                                                        Constants.ORDER_INIT => ("bg-warning", "bi-hourglass-split"),
+                                                        Constants.ORDER_ACCEPTED => ("bg-primary", "bi-check-circle"),
+                                                        Constants.ORDER_SHIPPING => ("bg-info", "bi-truck"),
+                                                        Constants.ORDER_FINISHED => ("bg-success", "bi-check-circle-fill"),
+                                                        Constants.ORDER_CANCEL => ("bg-danger", "bi-x-circle"),
+                                                        Constants.ORDER_REJECTED => ("bg-danger", "bi-x-circle-fill"),
+                                                        _ => ("bg-secondary", "bi-question-circle")
+                                                    };
+                                                }
+                                                <span class="badge @badgeClass">
+                                                    <i class="bi @icon me-1"></i>
+                                                    @order.StatusDescription
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="order-@order.OrderID" class="accordion-collapse collapse">
+                                    <div class="accordion-body">
+                                        <!-- Chi tiết đơn hàng -->
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Sản phẩm</th>
+                                                        <th class="text-center">Đơn vị</th>
+                                                        <th class="text-end">Đơn giá</th>
+                                                        <th class="text-center">Số lượng</th>
+                                                        <th class="text-end">Thành tiền</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var detail in order.Details)
+                                                    {
+                                                        <tr>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    @if (!string.IsNullOrEmpty(detail.Photo))
+                                                                    {
+                                                                                        <img src="@WebConfig.IMAGE_SOURCE_HOST/images/products/@detail.Photo"
+                                                                             alt="@detail.ProductName"
+                                                                             style="width: 50px; height: 50px; object-fit: cover;"
+                                                                             class="me-2 border rounded">
+                                                                    }
+                                                                    <span>@detail.ProductName</span>
+                                                                </div>
+                                                            </td>
+                                                            <td class="text-center">@detail.Unit</td>
+                                                            <td class="text-end">@detail.SalePrice.ToString("N0") đ</td>
+                                                            <td class="text-center">@detail.Quantity</td>
+                                                            <td class="text-end">@((detail.SalePrice * detail.Quantity).ToString("N0")) đ</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                                <tfoot class="table-light">
+                                                    <tr>
+                                                        <td colspan="4" class="text-end"><strong>Tổng cộng:</strong></td>
+                                                        <td class="text-end">
+                                                            <strong>@(order.Details.Sum(m => m.SalePrice * m.Quantity).ToString("N0")) đ</strong>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+
+                                        <!-- Thông tin giao hàng -->
+                                        <div class="row mt-3">
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title"><i class="bi bi-geo-alt"></i> Địa chỉ giao hàng</h6>
+                                                        <p class="mb-1">@order.DeliveryAddress</p>
+                                                        <p class="mb-0">@order.DeliveryProvince</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title"><i class="bi bi-clock-history"></i> Thời gian</h6>
+                                                        <p class="mb-1"><strong>Đặt hàng:</strong> @order.OrderTime.ToString("dd/MM/yyyy HH:mm")</p>
+                                                        @if (order.AcceptTime.HasValue)
+                                                        {
+                                                            <p class="mb-1"><strong>Duyệt đơn:</strong> @order.AcceptTime.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                                        }
+                                                        @if (order.ShippedTime.HasValue)
+                                                        {
+                                                            <p class="mb-1"><strong>Giao hàng:</strong> @order.ShippedTime.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                                        }
+                                                        @if (order.FinishedTime.HasValue)
+                                                        {
+                                                            <p class="mb-0"><strong>Hoàn thành:</strong> @order.FinishedTime.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .accordion-button:not(.collapsed) {
+            color: #C8102E;
+            background-color: #fff;
+        }
+
+        .accordion-button:focus {
+            border-color: #C8102E;
+            box-shadow: 0 0 0 0.25rem rgba(200, 16, 46, 0.25);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+}

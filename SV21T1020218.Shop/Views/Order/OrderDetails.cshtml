@@ -1,0 +1,135 @@
+﻿@using SV21T1020218.DomainModels
+@model Order
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.OrderID}";
+}
+
+<section class="py-5">
+    <div class="container px-4 px-lg-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-receipt"></i> Chi tiết đơn hàng #@Model.OrderID</h4>
+            </div>
+            <div class="card-body">
+                <!-- Thông tin đơn hàng -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-person"></i> Thông tin khách hàng</h5>
+                                <hr>
+                                <p class="mb-1"><strong>Tên khách hàng:</strong> @Model.CustomerName</p>
+                                <p class="mb-1"><strong>Người liên hệ:</strong> @Model.CustomerContactName</p>
+                                <p class="mb-1"><strong>Email:</strong> @Model.CustomerEmail</p>
+                                <p class="mb-1"><strong>Điện thoại:</strong> @Model.CustomerPhone</p>
+                                <p class="mb-1"><strong>Địa chỉ:</strong> @Model.CustomerAddress</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-truck"></i> Thông tin giao hàng</h5>
+                                <hr>
+                                <p class="mb-1"><strong>Tỉnh/Thành phố:</strong> @Model.DeliveryProvince</p>
+                                <p class="mb-1"><strong>Địa chỉ giao hàng:</strong> @Model.DeliveryAddress</p>
+                                <p class="mb-1"><strong>Thời gian đặt hàng:</strong> @Model.OrderTime.ToString("dd/MM/yyyy HH:mm")</p>
+                                <p class="mb-1">
+                                    <strong>Trạng thái:</strong>
+                                    @switch (Model.Status)
+                                    {
+                                        case 1:
+                                            <span class="badge bg-info">Chờ duyệt</span>
+                                            break;
+                                        case 2:
+                                            <span class="badge bg-primary">Đã duyệt</span>
+                                            break;
+                                        case 3:
+                                            <span class="badge bg-warning">Đang giao</span>
+                                            break;
+                                        case 4:
+                                            <span class="badge bg-success">Đã giao</span>
+                                            break;
+                                        case -1:
+                                            <span class="badge bg-danger">Đã hủy</span>
+                                            break;
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chi tiết sản phẩm -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3"><i class="bi bi-cart3"></i> Danh sách sản phẩm</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Đơn vị</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Details != null && Model.Details.Any())
+                                    {
+                                        @foreach (var item in Model.Details)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        @if (!string.IsNullOrEmpty(item.Photo))
+                                                        {
+                                                            <img src="~/images/products/@item.Photo"
+                                                                alt="@item.ProductName"
+                                                                style="width: 50px; height: 50px; object-fit: cover;"
+                                                                class="me-2 border rounded">
+                                                        }
+                                                        <span>@item.ProductName</span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">@item.Unit</td>
+                                                <td class="text-end">@item.SalePrice.ToString("N0") đ</td>
+                                                <td class="text-center">@item.Quantity</td>
+                                                <td class="text-end">@((item.SalePrice * item.Quantity).ToString("N0")) đ</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="text-center">Không có sản phẩm nào</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="4" class="text-end"><strong>Tổng cộng:</strong></td>
+                                        <td class="text-end">
+                                            <strong>@(Model.Details?.Sum(m => m.SalePrice * m.Quantity).ToString("N0") ?? "0") đ</strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nút điều hướng -->
+                <div class="text-center mt-4">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-secondary me-2">
+                        <i class="bi bi-arrow-left"></i> Về trang chủ
+                    </a>
+                    <a href="@Url.Action("Index", "Product")" class="btn btn-primary">
+                        <i class="bi bi-cart-plus"></i> Tiếp tục mua sắm
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

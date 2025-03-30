@@ -1,0 +1,311 @@
+﻿@model ProductSearchResult
+@{
+    ViewData["Title"] = "Danh sách sản phẩm";
+}
+
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <!-- Filter box -->
+        <div class="row mb-4">
+            <div class="col">
+                <form method="get" action="~/Product" id="filterForm">
+                    <div class="row g-3">
+                        <div class="col-md">
+                            <label class="form-label">Loại hàng:</label>
+                            <select class="form-select" name="categoryID">
+                                <option value="0">-- Chọn loại hàng --</option>
+                                @foreach (var category in SV21T1020218.BusinessLayers.CommonDataService.ListOfCategories())
+                                {
+                                    if (Model.CategoryID == category.CategoryID)
+                                    {
+                                        <option value="@category.CategoryID" selected>@category.CategoryName</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@category.CategoryID">@category.CategoryName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md">
+                            <label class="form-label">Nhà cung cấp:</label>
+                            <select class="form-select" name="supplierID">
+                                <option value="0">-- Chọn nhà cung cấp --</option>
+                                @foreach (var supplier in SV21T1020218.BusinessLayers.CommonDataService.ListOfSuppliers())
+                                {
+                                    if (Model.SupplierID == supplier.SupplierID)
+                                    {
+                                        <option value="@supplier.SupplierID" selected>@supplier.SupplierName</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@supplier.SupplierID">@supplier.SupplierName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md">
+                            <label class="form-label">Giá từ:</label>
+                            <input type="text" class="form-control price-input" name="minPrice" value="@Model.MinPrice.ToString("N0")" min="0">
+                        </div>
+                        <div class="col-md">
+                            <label class="form-label">đến:</label>
+                            <input type="text" class="form-control price-input" name="maxPrice" value="@Model.MaxPrice.ToString("N0")" min="0">
+                        </div>
+                        <div class="col-md">
+                            <label class="form-label">Tên mặt hàng:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="searchValue" 
+                                       placeholder="Nhập tên mặt hàng cần tìm..." value="@Model.SearchValue">
+                                <button class="btn btn-outline-dark" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Products grid -->
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+            @if (Model?.Data != null && Model.Data.Any())
+            {
+                foreach (var item in Model.Data)
+                {
+                    <div class="col mb-5">
+                        <div class="card h-100">
+                            <!-- Product image-->
+                            <img class="card-img-top" src="@WebConfig.IMAGE_SOURCE_HOST/images/products/@item.Photo" alt="@item.ProductName" />
+                            <!-- Product details-->
+                            <div class="card-body p-4">
+                                <div class="text-center">
+                                    <!-- Product name-->
+                                    <h5 class="fw-bolder">
+                                        <a href="~/Product/Details/@item.ProductID" class="text-decoration-none text-dark">
+                                            @item.ProductName
+                                        </a>
+                                    </h5>
+                                    <!-- Product unit -->
+                                    <span class="text-muted">@item.Unit</span>
+                                    <!-- Product price-->
+                                    <div class="mt-2">@item.Price.ToString("N0") VNĐ</div>
+                                </div>
+                            </div>
+                            <!-- Product actions-->
+                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                <div class="text-center">
+                                    <button class="btn btn-outline-dark mt-auto" 
+                                            onclick="addToCart('@item.ProductID', '@item.ProductName', '@item.Photo', '@item.Unit', '@item.Price')">
+                                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center">
+                    <p>Không có sản phẩm nào.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (Model?.PageCount > 1)
+        {
+            <div class="row">
+                <div class="col d-flex justify-content-center">
+                    <nav>
+                        <ul class="pagination">
+                            @{
+                                int currentPage = Model.Page;
+                                int totalPages = Model.PageCount;
+                                int maxPagesToShow = 5;
+                                int start = Math.Max(1, currentPage - maxPagesToShow / 2);
+                                int end = Math.Min(start + maxPagesToShow - 1, totalPages);
+
+                                if (end - start + 1 < maxPagesToShow)
+                                {
+                                    start = Math.Max(1, end - maxPagesToShow + 1);
+                                }
+
+                                string GetPageUrl(int pageNumber)
+                                {
+                                    var url = Url.Action("Index", "Product", new
+                                    {
+                                        page = pageNumber,
+                                        searchValue = Model.SearchValue,
+                                        categoryID = Model.CategoryID,
+                                        supplierID = Model.SupplierID,
+                                        minPrice = Model.MinPrice,
+                                        maxPrice = Model.MaxPrice
+                                    });
+                                    return url ?? "#";
+                                }
+                            }
+
+                            @if (currentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(currentPage-1)">Trước</a>
+                                </li>
+                            }
+
+                            @if (start > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(1)">1</a>
+                                </li>
+                                if (start > 2)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                            }
+
+                            @for (int i = start; i <= end; i++)
+                            {
+                                if (i == currentPage)
+                                {
+                                    <li class="page-item active">
+                                        <span class="page-link">@i</span>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="@GetPageUrl(i)">@i</a>
+                                    </li>
+                                }
+                            }
+
+                            @if (end < totalPages)
+                            {
+                                if (end < totalPages - 1)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(totalPages)">@totalPages</a>
+                                </li>
+                            }
+
+                            @if (currentPage < totalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(currentPage+1)">Sau</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@section scripts {
+    <script>
+        function addToCart(productId, productName, photo, unit, price) {
+            const formData = new FormData();
+            formData.append('ProductID', productId);
+            formData.append('ProductName', productName);
+            formData.append('Photo', photo);
+            formData.append('Unit', unit);
+            formData.append('SalePrice', price);
+            formData.append('Quantity', 1);
+
+            $.ajax({
+                url: '@Url.Action("AddToCart", "Order")',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(result) {
+                    if (result === "") {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công!',
+                            text: 'Đã thêm sản phẩm vào giỏ hàng',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        updateCartInfo();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi!',
+                            text: result
+                        });
+                    }
+                }
+            });
+        }
+
+        function updateCartInfo() {
+            $.get('@Url.Action("GetCartInfo", "Order")', function(result) {
+                console.log("Cart info:", result); // Log để debug
+                $('#cartCount').text(result.count);
+            });
+        }
+
+        // Cập nhật số lượng giỏ hàng khi tải trang
+        $(document).ready(function() {
+            updateCartInfo();
+
+            // Handle filter changes
+            $('#filterForm select, #filterForm input[type="number"]').change(function() {
+                $('#filterForm').submit();
+            });
+
+            // Xử lý định dạng số cho input giá
+            $('.price-input').on('input', function(e) {
+                // Lấy giá trị hiện tại và xóa tất cả ký tự không phải số
+                let value = $(this).val().replace(/[^\d]/g, '');
+                
+                // Nếu có giá trị, định dạng với dấu phẩy
+                if (value) {
+                    // Chuyển thành số
+                    let number = parseInt(value);
+                    // Định dạng với dấu phẩy
+                    $(this).val(number.toLocaleString('vi-VN'));
+                }
+            });
+
+            // Xử lý trước khi submit form
+            $('#filterForm').submit(function(e) {
+                // Chuyển đổi giá trị input về dạng số trước khi submit
+                $('.price-input').each(function() {
+                    let value = $(this).val().replace(/[^\d]/g, '');
+                    $(this).val(value);
+                });
+
+                var minPrice = parseInt($('input[name="minPrice"]').val()) || 0;
+                var maxPrice = parseInt($('input[name="maxPrice"]').val()) || 0;
+
+                if (minPrice > maxPrice && maxPrice !== 0) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi!',
+                        text: 'Giá từ không thể lớn hơn giá đến'
+                    });
+                    
+                    // Khôi phục lại định dạng số sau khi kiểm tra
+                    $('.price-input').each(function() {
+                        let value = $(this).val();
+                        if (value) {
+                            $(this).val(parseInt(value).toLocaleString('vi-VN'));
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

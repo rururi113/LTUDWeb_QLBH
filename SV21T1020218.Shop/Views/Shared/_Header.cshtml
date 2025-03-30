@@ -1,0 +1,113 @@
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+<!-- Navigation-->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="@Url.Action("Index", "Home")">
+            <img src="~/images/LVP.jpg" alt="Liverpool Logo" style="width: 80px; height: 50px; vertical-align: middle; margin-right: 10px;">
+            Liverpool Shop
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                
+            </ul>
+
+            <div class="d-flex align-items-center">
+                <!-- Giỏ hàng -->
+                <a href="@Url.Action("ShoppingCart", "Order")" class="btn btn-outline-dark me-3">
+                    <i class="bi bi-cart-fill me-1"></i>
+                    Giỏ hàng
+                    @{
+                        var cart = ApplicationContext.GetSessionData<List<CartItem>>("ShoppingCart");
+                        var cartCount = cart?.Count ?? 0;
+                    }
+                    <span id="cartCount" class="badge bg-dark text-white ms-1 rounded-pill">@cartCount</span>
+                </a>
+
+                <!-- User menu -->
+                @if (HttpContextAccessor.HttpContext.User.Identity != null && HttpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    var user = HttpContextAccessor.HttpContext.User.GetUserData();
+                    if (user != null)
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-fill me-1"></i>
+                                @user.Displayname
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="~/Customer/EditProfile?id=@user.UserId">
+                                        <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa thông tin
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="~/Account/ChangePassword">
+                                        <i class="bi bi-key me-2"></i>Đổi mật khẩu
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="~/Order">
+                                        <i class="bi bi-bag-check me-2"></i>Theo Dõi Đơn Hàng
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <a class="dropdown-item" href="~/Account/Logout">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <a href="~/Account/Login" class="btn btn-outline-dark">
+                        <i class="bi bi-person me-1"></i>Đăng nhập
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Header-->
+<header class="bg-dark py-5" style="background-color: #C8102E !important;">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">Liverpool Shop</h1>
+            <p class="lead fw-normal text-white-50 mb-0">You'll Never Walk Alone</p>
+        </div>
+    </div>
+</header>
+
+<script>
+    // Hàm cập nhật số lượng giỏ hàng
+    function updateCartInfo() {
+        $.ajax({
+            url: '@Url.Action("GetCartInfo", "Order")',
+            type: 'GET',
+            success: function(result) {
+                console.log('Cart info:', result); // Debug log
+                $('#cartCount').text(result.count);
+            },
+            error: function(error) {
+                console.error('Error updating cart:', error);
+            }
+        });
+    }
+
+    // Cập nhật số lượng giỏ hàng khi tải trang
+    $(document).ready(function() {
+        updateCartInfo();
+        
+        // Cập nhật mỗi khi có thay đổi trong giỏ hàng
+        $(document).on('cart:updated', function() {
+            updateCartInfo();
+        });
+    });
+</script>

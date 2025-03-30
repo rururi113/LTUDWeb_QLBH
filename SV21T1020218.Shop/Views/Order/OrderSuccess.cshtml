@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Đặt hàng thành công";
+}
+
+<section class="py-5">
+    <div class="container px-4 px-lg-5">
+        <div class="text-center">
+            <i class="bi bi-check-circle text-success" style="font-size: 5rem;"></i>
+            <h2 class="mt-3">Đặt hàng thành công!</h2>
+            <p class="lead">
+                Cảm ơn <strong>@ViewBag.CustomerName</strong> đã đặt hàng.<br />
+                Mã đơn hàng của bạn là: <strong>#@ViewBag.OrderId</strong><br />
+                Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.
+            </p>
+            <div class="mt-4">
+                <a href="@Url.Action("Index", "Product")" class="btn btn-outline-dark me-2">
+                    <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
+                </a>
+                <a href="@Url.Action("OrderDetails", "Order", new { id = ViewBag.OrderId })" class="btn btn-danger">
+                    <i class="bi bi-eye"></i> Xem chi tiết đơn hàng
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

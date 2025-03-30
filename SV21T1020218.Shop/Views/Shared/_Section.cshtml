@@ -1,0 +1,110 @@
+﻿@model ProductSearchResult
+
+<!-- Section-->
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+            @if (Model?.Data != null && Model.Data.Any())
+            {
+                foreach (var product in Model.Data)
+                {
+                    <div class="col mb-5">
+                        <div class="card h-100">
+                            <!-- Product image-->
+                            <img class="card-img-top" src="~/images/products/@product.Photo" alt="@product.ProductName" />
+                            <!-- Product details-->
+                            <div class="card-body p-4">
+                                <div class="text-center">
+                                    <!-- Product name-->
+                                    <h5 class="fw-bolder">@product.ProductName</h5>
+                                    <!-- Product price-->
+                                    @product.Price.ToString("N0") VNĐ
+                                </div>
+                            </div>
+                            <!-- Product actions-->
+                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                <div class="text-center">
+                                    <a class="btn btn-outline-dark mt-auto" href="#">Add to cart</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Pagination -->
+                @if (Model?.PageCount > 1)
+                {
+                    <div class="row">
+                        <div class="col d-flex justify-content-center">
+                            <nav>
+                                <ul class="pagination">
+                                    @{
+                                        int startPage = Math.Max(1, Model.Page - 2);
+                                        int endPage = Math.Min(Model.PageCount, startPage + 4);
+                                        startPage = Math.Max(1, endPage - 4);
+                                    }
+
+                                    @if (Model.Page > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="~/Product?page=1">&laquo;</a>
+                                        </li>
+                                    }
+
+                                    @for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        if (i == Model.Page)
+                                        {
+                                            <li class="page-item active">
+                                                <a class="page-link" href="#">@i</a>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="~/Product?page=@i">@i</a>
+                                            </li>
+                                        }
+                                    }
+
+                                    @if (Model.Page < Model.PageCount)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="~/Product?page=@Model.PageCount">&raquo;</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center">
+                    <p>Không có sản phẩm nào.</p>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function loadProducts(page) {
+            $.get('@Url.Action("List", "Product")', { 
+                page: page,
+                pageSize: @Model.PageSize,
+                searchValue: '@Model.SearchValue',
+                categoryID: @Model.CategoryID,
+                supplierID: @Model.SupplierID,
+                minPrice: '@Model.MinPrice',
+                maxPrice: '@Model.MaxPrice'
+            }, function (result) {
+                if (result.data) {
+                    $('#productList').html(result.data);
+                }
+            });
+        }
+    </script>
+}
